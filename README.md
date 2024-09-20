@@ -9,7 +9,11 @@ Le projet vous sera fourni avec une configuration de base incluant [Symfony](htt
 ### Installation
 
 #### Démarrage Docker
-Se référer à la documentation [relative à Docker](https://github.com/dunglas/symfony-docker)
+```shell
+docker compose build --no-cache
+docker compose up --pull always --wait
+```
+Se référer à la [documentation relative à Docker](https://github.com/dunglas/symfony-docker)
 
 #### Génération des clefs JWT
 ```shell
@@ -74,6 +78,9 @@ L'objectif est de développer une API REST qui permet aux utilisateurs authentif
         - L’accès aux sociétés et projets par les utilisateurs, en fonction de leurs rôles.
         - La création, modification et suppression de projets, avec des contrôles de droits.
         - La restriction de l'accès aux sociétés et projets pour les utilisateurs non membres.
+
+**Notes :**
+Les utilisateurs étant déjà fournis, il n'est pas nécessaire d'en sécuriser les routes (même si conseillé). En revanche, vous devez les configurer afin de les rendre accessible en tant que ressource API.  
 
 ---
 
