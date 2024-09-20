@@ -11,6 +11,22 @@ Le projet vous sera fourni avec une configuration de base incluant [Symfony](htt
 #### Démarrage Docker
 Se référer à la documentation [relative à Docker](https://github.com/dunglas/symfony-docker)
 
+#### Génération des clefs JWT
+```shell
+docker compose exec php bin/console lexik:jwt:generate-keypair
+```
+
+#### Chargement du jeu de tests
+```shell
+docker compose exec php bin/console doctrine:fixtures:load --no-interaction
+```
+
+
+#### Vérifications
+Accéder à https://localhost/api et vérifier que la documentation API se charge bien.
+Utiliser votre client HTTP préféré afin de tester une connexion à l'API sur la route d'authentication.
+Utilisateurs de test : `user1@local.host:my_password` ou `user2@local.host:my_password`
+
 ---
 
 ### Objectif :
