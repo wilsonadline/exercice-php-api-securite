@@ -4,6 +4,15 @@ Vous devez développer une application de **gestion de projets multi-sociétés*
 
 Le projet vous sera fourni avec une configuration de base incluant [Symfony](https://symfony.com/doc/current/index.html), [API Platform](https://api-platform.com/docs/core/) et une authentification [JWT](https://github.com/lexik/LexikJWTAuthenticationBundle).
 
+---
+
+### Installation
+
+#### Démarrage Docker
+Se référer à la documentation [relative à Docker](https://github.com/dunglas/symfony-docker)
+
+---
+
 ### Objectif :
 
 L'objectif est de développer une API REST qui permet aux utilisateurs authentifiés de gérer des sociétés et des projets au sein de ces sociétés, tout en respectant les droits d'accès définis par leurs rôles.
