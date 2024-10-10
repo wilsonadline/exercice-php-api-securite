@@ -8,7 +8,7 @@ Le projet vous sera fourni avec une configuration de base incluant [Symfony](htt
 
 ### Installation
 
-Si vous décidez de fork ce repo, il est préférable d'en faire une copie privée et de nous en donner les droits de lecture une fois l'exercice terminé.
+Si vous décidez de fork ce repo, il est préférable d'en faire une copie privée et de nous en donner les droits de lecture une fois l'exercice terminé (donnez les droits à [Guillaume Adam](https://github.com/Bisb)).
 
 #### Démarrage Docker
 ```shell
