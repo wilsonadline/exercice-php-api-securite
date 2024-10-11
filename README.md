@@ -88,7 +88,7 @@ Les utilisateurs étant déjà fournis, il n'est pas nécessaire d'en sécuriser
 
 ### Résultats attendus :
 
-- **API REST fonctionnelle** : Vous devez fournir une API utilisant **API Platform**, qui permet de gérer les sociétés, les projets et les droits des utilisateurs sur ces entités.
+- **API REST fonctionnelle** : Vous devez fournir une API utilisant **API Platform**, qui permet de gérer les sociétés, les projets et les droits des utilisateurs sur ces entités. **Vous ne devez pas intégrer de contrôleurs sur mesure**
 - **Sécurité des accès** : Les accès aux différentes ressources doivent être sécurisés et respecter les rôles des utilisateurs dans chaque société.
 - **Tests** : Des tests complets doivent valider les règles de gestion des droits et les fonctionnalités principales.
 
