@@ -8,7 +8,7 @@ Le projet vous sera fourni avec une configuration de base incluant [Symfony](htt
 
 ### Installation
 
-Si vous décidez de fork ce repo, il est préférable d'en faire une copie privée et de nous en donner les droits de lecture une fois l'exercice terminé (donnez les droits à [Guillaume Adam](https://github.com/Bisb)).
+Si vous décidez de fork ce repo, il est préférable d'en faire une copie privée et de nous en donner les droits de lecture une fois l'exercice terminé.
 
 #### Démarrage Docker
 ```shell
@@ -88,7 +88,7 @@ Les utilisateurs étant déjà fournis, il n'est pas nécessaire d'en sécuriser
 
 ### Résultats attendus :
 
-- **API REST fonctionnelle** : Vous devez fournir une API utilisant **API Platform**, qui permet de gérer les sociétés, les projets et les droits des utilisateurs sur ces entités. **Vous ne devez pas intégrer de contrôleurs sur mesure**
+- **API REST fonctionnelle** : Vous devez fournir une API utilisant **API Platform**, qui permet de gérer les sociétés, les projets et les droits des utilisateurs sur ces entités.
 - **Sécurité des accès** : Les accès aux différentes ressources doivent être sécurisés et respecter les rôles des utilisateurs dans chaque société.
 - **Tests** : Des tests complets doivent valider les règles de gestion des droits et les fonctionnalités principales.
 
