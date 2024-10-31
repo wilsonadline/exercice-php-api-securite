@@ -2,27 +2,44 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Metadata\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity]
+#[UniqueEntity(
+    fields: ['user', 'company'],
+    message: 'Cet utilisateur a déjà un rôle dans cette entreprise.'
+)]
 class CompanyUserRole
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
+    #[ORM\GeneratedValue(strategy: 'AUTO')]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['user:detail', 'user:list', 'company:detail'])]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'companyUserRoles', cascade: ['remove'])]
-    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'companyUserRoles')]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull(message: "L'utilisateur est obligatoire")]
+    #[Groups(['company:detail', 'company_user_role:write'])]
     private ?User $user = null;
 
-    #[ORM\ManyToOne(targetEntity: Company::class, inversedBy: 'companyUserRoles', cascade: ['remove'])]
-    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
+    #[ORM\ManyToOne(targetEntity: Company::class, inversedBy: 'companyUserRoles')]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull(message: "L'entreprise est obligatoire")]
+    #[Groups(['user:detail', 'user:list', 'company_user_role:write'])]
     private ?Company $company = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $role = null;
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: 'Le rôle est obligatoire')]
+    #[Assert\Choice(
+        choices: ['admin', 'manager', 'consultant'],
+        message: 'Le rôle choisi n\'est pas valide'
+    )]
+    #[Groups(['user:detail', 'user:list', 'company:detail', 'company_user_role:write'])]
+    private string $role;
 
     public function getId(): ?int
     {

@@ -28,32 +28,65 @@ class AppFixtures extends Fixture implements DependentFixtureInterface
         $adminUser = new User();
         $adminUser->setEmail('admin@local.host');
         $adminUser->setRoles(['ROLE_ADMIN']);
-        $adminUser->setPassword($this->passwordHasher->hashPassword($adminUser, 'admin_password'));
+        $hashedPassword = $this->passwordHasher->hashPassword($adminUser, 'admin_password');
+        $adminUser->setPassword($hashedPassword);
         $manager->persist($adminUser);
         $this->addReference('user-0', $adminUser);
 
+
+        // Créer un utilisateur manager+.
         $managerUser = new User();
         $managerUser->setEmail('manager@local.host');
         $managerUser->setRoles(['ROLE_MANAGER']);
-        $managerUser->setPassword($this->passwordHasher->hashPassword($managerUser, 'manager_password'));
+        $hashedPassword = $this->passwordHasher->hashPassword($managerUser, 'manager_password');
+        $managerUser->setPassword($hashedPassword);
         $manager->persist($managerUser);
         $this->addReference('user-1', $managerUser);
 
+
+        // Créer un utilisateur standard
         $consultantUser = new User();
-        $consultantUser->setEmail('consultant@local.host');
+        $consultantUser->setEmail('user@local.host');
         $consultantUser->setRoles(['ROLE_CONSULTANT']);
-        $consultantUser->setPassword($this->passwordHasher->hashPassword($consultantUser, 'consultant_password'));
+        $hashedPassword = $this->passwordHasher->hashPassword($consultantUser, 'user_password');
+        $consultantUser->setPassword($hashedPassword);
         $manager->persist($consultantUser);
         $this->addReference('user-2', $consultantUser);
 
-        $nonMemberUser = new User();
-        $nonMemberUser->setEmail('nonmember@local.host');
-        $nonMemberUser->setRoles(['ROLE_USER']);
-        $nonMemberUser->setPassword($this->passwordHasher->hashPassword($nonMemberUser, 'nonmember_password'));
-        $manager->persist($nonMemberUser);
-        $this->addReference('user-3', $nonMemberUser);
+        $consultantUser1 = new User();
+        $consultantUser1->setEmail('user1@local.host');
+        $consultantUser1->setRoles(['ROLE_CONSULTANT']);
+        $hashedPassword = $this->passwordHasher->hashPassword($consultantUser1, 'user1_password');
+        $consultantUser1->setPassword($hashedPassword);
+        $manager->persist($consultantUser1);
+        $this->addReference('user-3', $consultantUser1);
 
-        // Création des associations CompanyUserRole
+        $consultantUser2 = new User();
+        $consultantUser2->setEmail('user2@local.host');
+        $consultantUser2->setRoles(['ROLE_CONSULTANT']);
+        $hashedPassword = $this->passwordHasher->hashPassword($consultantUser2, 'user2_password');
+        $consultantUser2->setPassword($hashedPassword);
+        $manager->persist($consultantUser2);
+        $this->addReference('user-4', $consultantUser2);
+
+        $consultantUser3 = new User();
+        $consultantUser3->setEmail('user3@local.host');
+        $consultantUser3->setRoles(['ROLE_CONSULTANT']);
+        $hashedPassword = $this->passwordHasher->hashPassword($consultantUser3, 'user3_password');
+        $consultantUser3->setPassword($hashedPassword);
+        $manager->persist($consultantUser3);
+        $this->addReference('user-5', $consultantUser3);
+
+        $consultantUser4 = new User();
+        $consultantUser4->setEmail('user4@local.host');
+        $consultantUser4->setRoles(['ROLE_CONSULTANT']);
+        $hashedPassword = $this->passwordHasher->hashPassword($consultantUser4, 'user4_password');
+        $consultantUser4->setPassword($hashedPassword);
+        $manager->persist($consultantUser4);
+        $this->addReference('user-6', $consultantUser4);
+
+
+        // Création des rôles liés aux utilisateurs
         $adminUserCompanyRole = new CompanyUserRole();
         $adminUserCompanyRole->setUser($adminUser);
         $adminUserCompanyRole->setCompany($company1);

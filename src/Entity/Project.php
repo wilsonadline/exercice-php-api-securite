@@ -8,55 +8,74 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Delete;
+use App\State\ProjectCollectionProvider;
+use App\State\ProjectItemProvider;
+use App\State\ProjectStateProcessor;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity]
 #[ApiResource(
     operations: [
         new GetCollection(
-            security: "is_granted('ROLE_CONSULTANT') or is_granted('ROLE_MANAGER') or is_granted('ROLE_ADMIN')",
-            securityMessage: "Only consultants, managers, and admins can view the list of projects."
-        ),
-        new Post(
-            security: "is_granted('ROLE_MANAGER') or is_granted('ROLE_ADMIN')",
-            securityMessage: "Only managers and admins can create projects."
+            provider: ProjectCollectionProvider::class,
+            security: "is_granted('VIEW_PROJECT', null)",
+            normalizationContext: ['groups' => ['project:read']]
         ),
         new Get(
-            security: "is_granted('ROLE_CONSULTANT') or is_granted('ROLE_MANAGER') or is_granted('ROLE_ADMIN')",
-            securityMessage: "Only consultants, managers, and admins can view project details."
+            provider: ProjectItemProvider::class,
+            security: "is_granted('VIEW_PROJECT', object)",
+            normalizationContext: ['groups' => ['project:read', 'project:detail', 'company:read', 'user:read']]
+        ),
+        new Post(
+            processor: ProjectStateProcessor::class,
+            security: "is_granted('CREATE_PROJECT', object)",
+            normalizationContext: ['groups' => ['project:read']],
+            denormalizationContext: ['groups' => ['project:write']]
         ),
         new Patch(
-            security: "is_granted('ROLE_MANAGER') or is_granted('ROLE_ADMIN')",
-            securityMessage: "Only managers and admins can modify projects."
+            provider: ProjectItemProvider::class,
+            processor: ProjectStateProcessor::class,
+            security: "is_granted('EDIT_PROJECT', object)",
+            normalizationContext: ['groups' => ['project:read']],
+            denormalizationContext: ['groups' => ['project:update']]
         ),
         new Delete(
-            security: "is_granted('ROLE_ADMIN')",
-            securityMessage: "Only admins can delete projects."
+            provider: ProjectItemProvider::class,
+            processor: ProjectStateProcessor::class,
+            security: "is_granted('DELETE_PROJECT', object)"
         )
-    ]
+    ],
+    normalizationContext: ['groups' => ['project:read']]
 )]
 class Project
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column]
+    #[Groups(['project:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['project:read', 'project:write', 'project:update'])]
     private ?string $title = null;
 
     #[ORM\Column(type: 'text')]
+    #[Groups(['project:read', 'project:write', 'project:update'])]
     private ?string $description = null;
 
     #[ORM\Column(type: 'datetime')]
+    #[Groups(['project:read'])]
     private ?\DateTimeInterface $createdAt = null;
 
     #[ORM\ManyToOne(targetEntity: Company::class, inversedBy: 'projects')]
-    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['project:read', 'project:write', 'project:detail'])]
     private ?Company $company = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'projects')]
-    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['project:read', 'project:detail'])]
     private ?User $createdBy = null;
 
     public function __construct()

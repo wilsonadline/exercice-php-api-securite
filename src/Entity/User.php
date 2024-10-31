@@ -8,65 +8,99 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Delete;
+use App\DataProvider\UserDataProvider;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use App\State\UserPasswordHasher;
+use App\State\UserStateProcessor;
+
 
 #[ORM\Entity]
 #[ApiResource(
     operations: [
         new GetCollection(
-            security: "is_granted('ROLE_ADMIN')",
-            securityMessage: "Only admins can view the list of users."
-        ),
-        new Post(
-            security: "is_granted('ROLE_ADMIN')",
-            securityMessage: "Only admins can create users."
+            normalizationContext: ['groups' => ['user:list']],
+            security: "is_granted('VIEW', null)",
+            provider: UserDataProvider::class
         ),
         new Get(
-            security: "is_granted('ROLE_ADMIN') or object == user",
-            securityMessage: "Only admins or the user themselves can view their details."
+            normalizationContext: ['groups' => ['user:read', 'user:detail']],
+            security: "is_granted('VIEW', object)",
+            securityMessage: "You cannot view this user."
+        ),
+        new Post(
+            normalizationContext: ['groups' => ['user:read']],
+            denormalizationContext: ['groups' => ['user:write']],
+            security: "is_granted('ROLE_ADMIN') or is_granted('ROLE_MANAGER')",
+            validationContext: ['groups' => ['Default', 'user:write']],
+            processor: UserStateProcessor::class
         ),
         new Patch(
-            security: "is_granted('ROLE_ADMIN') or object == user",
-            securityMessage: "Only admins or the user themselves can modify their details."
+            normalizationContext: ['groups' => ['user:read']],
+            denormalizationContext: ['groups' => ['user:update']],
+            security: "is_granted('EDIT', object)",
+            securityMessage: "You cannot edit this user.",
+            validationContext: ['groups' => ['Default', 'user:update']],
+            processor: UserPasswordHasher::class
         ),
         new Delete(
             security: "is_granted('ROLE_ADMIN')",
             securityMessage: "Only admins can delete users."
         )
-    ]
+    ],
+    normalizationContext: ['groups' => ['user:read']]
 )]
+#[UniqueEntity('email')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
+    #[ORM\GeneratedValue(strategy: 'AUTO')]
     #[ORM\Column(type: 'integer')]
+    #[Groups(['user:read', 'user:list'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
-    private ?string $email = null;
+    #[Groups(['user:read', 'user:list', 'user:write', 'user:update'])]
+    #[Assert\NotBlank]
+    #[Assert\Email]
+    private string $email = '';
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'json')]
+    #[Groups(['user:read', 'user:list', 'user:write', 'user:update'])]
+    #[Assert\NotNull]
     private array $roles = [];
 
-    #[ORM\Column]
-    private ?string $password = null;
+    #[ORM\Column(type: 'string', length: 255)]
+    private string $password = '';
 
+    #[Assert\NotBlank(groups: ['user:write'], message: 'Le mot de passe est obligatoire')]
+    #[Assert\Length(
+        min: 8,
+        minMessage: 'Le mot de passe doit faire au moins {{ limit }} caractères',
+        groups: ['user:write', 'user:update']
+    )]
+    #[Groups(['user:write', 'user:update'])]
     private ?string $plainPassword = null;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: CompanyUserRole::class, cascade: ['remove'], orphanRemoval: true)]
+    #[ORM\OneToMany(
+        targetEntity: CompanyUserRole::class,
+        mappedBy: 'user',
+        cascade: ['persist', 'remove'],
+        orphanRemoval: true
+    )]
+    #[Groups(['user:read', 'user:list'])]
     private Collection $companyUserRoles;
-
-    #[ORM\OneToMany(mappedBy: 'createdBy', targetEntity: Project::class, cascade: ['remove'], orphanRemoval: true)]
-    private Collection $projects;
 
     public function __construct()
     {
+        $this->roles = ['ROLE_CONSULTANT'];
         $this->companyUserRoles = new ArrayCollection();
-        $this->projects = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -74,29 +108,34 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->id;
     }
 
-    public function getEmail(): ?string
+    public function getEmail(): string
     {
         return $this->email;
     }
 
     public function setEmail(string $email): self
     {
+        if (empty($email)) {
+            throw new \InvalidArgumentException('Email cannot be null or empty');
+        }
         $this->email = $email;
         return $this;
     }
 
     public function getRoles(): array
     {
-        return array_unique($this->roles);
+        $roles = $this->roles;
+        $roles[] = 'ROLE_CONSULTANT';
+        return array_unique($roles);
     }
 
     public function setRoles(array $roles): self
     {
-        $this->roles = $roles;
+        $this->roles = array_unique($roles);
         return $this;
     }
 
-    public function getPassword(): ?string
+    public function getPassword(): string
     {
         return $this->password;
     }
@@ -118,14 +157,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getUserIdentifier(): string
-    {
-        return $this->email;
-    }
-
     public function eraseCredentials(): void
     {
         $this->plainPassword = null;
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email;
     }
 
     /**
@@ -139,10 +178,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function addCompanyUserRole(CompanyUserRole $companyUserRole): self
     {
         if (!$this->companyUserRoles->contains($companyUserRole)) {
-            $this->companyUserRoles->add($companyUserRole);
+            $this->companyUserRoles[] = $companyUserRole;
             $companyUserRole->setUser($this);
         }
-
         return $this;
     }
 
@@ -153,36 +191,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $companyUserRole->setUser(null);
             }
         }
-
         return $this;
     }
 
-    /**
-     * @return Collection<int, Project>
-     */
-    public function getProjects(): Collection
+    public function getCompanyId(): ?int
     {
-        return $this->projects;
+        $role = $this->companyUserRoles->first();
+        return $role ? $role->getCompany()->getId() : null;
     }
 
-    public function addProject(Project $project): self
+    public function getCompanyIds(): array
     {
-        if (!$this->projects->contains($project)) {
-            $this->projects->add($project);
-            $project->setCreatedBy($this);
+        $companyIds = [];
+        foreach ($this->companyUserRoles as $role) {
+            $companyIds[] = $role->getCompany()->getId();
         }
-
-        return $this;
-    }
-
-    public function removeProject(Project $project): self
-    {
-        if ($this->projects->removeElement($project)) {
-            if ($project->getCreatedBy() === $this) {
-                $project->setCreatedBy(null);
-            }
-        }
-
-        return $this;
+        return $companyIds;
     }
 }
